@@ -136,7 +136,7 @@ if (isset($_SESSION['sesion_iniciada']) == true && $_SESSION['Estado'] == 1 && $
                     
                     
                     <div id="novedadAgendamiento">
-                </div>  
+                    </div>  
     
             
             </main>

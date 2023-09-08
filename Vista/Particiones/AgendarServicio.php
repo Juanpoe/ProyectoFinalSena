@@ -21,7 +21,7 @@ include("../Paginador.php");
                     </div>
                     <div class="item">
                         <p>Nombre del Empleado</p>
-                        <select name="nombre" id="Empleado" onclick="ValidarEmpleado();"></select>
+                        <select name="nombre" id="Empleado" onchange="ValidacionDeServiciosEmpleados();" onclick="ValidarEmpleado();"></select>
                         <br>
                         <span id="MensajeEmpleado"></span>
                     </div>
@@ -35,7 +35,7 @@ include("../Paginador.php");
                     </div>
                     <div class="item">
                         <p>Fecha</p>
-                        <input type="date" id="Fecha" placeholder="Ingrese fecha" oninput="ValidarFechaDelAgendamiento(); ValidarElTamañoMaximoFecha();">
+                        <input type="date" id="Fecha" placeholder="Ingrese fecha" oninput="ValidarFechaDelAgendamiento(); ValidarElTamañoMaximoFecha();ValidacionDeServiciosEmpleados();">
                         <br>
                         <span id="MensajeFecha"></span>
                     </div>
@@ -91,7 +91,7 @@ include("../Paginador.php");
                 <br>
                 <span id="MensajeDescripcion"></span>
                 <div class="Boton">
-                    <button type="submit" id="Agendar" title="Guardar Agendamiento" onclick="ValidacionDeServiciosEmpleados();GuardarAgendamiento();" class="btn-azul" disabled>Agendar</button>
+                    <button type="submit" id="Agendar" title="Guardar Agendamiento" onclick="GuardarAgendamiento();" class="btn-azul" disabled>Agendar</button>
                 </div>
 </div>
 </form>

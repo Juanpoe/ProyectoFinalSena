@@ -7,6 +7,7 @@ var CantidadRegistrados = []
 var NuevaCantidad=0
 var  Copia = new Object;
 var  valorNulo = new Object;
+var ValidarAgendadelEmpleado = false
 
 
 function ValidarElTamañoMaximoFecha(){
@@ -25,11 +26,14 @@ function ValidarElTamañoMaximoFecha(){
 
   }
 
+  
+
 
   function ValidacionDeServiciosEmpleados(){
     var IdEmpleado= document.getElementById("Empleado").value
     var FechaServicio = document.getElementById("Fecha").value
 
+    
 
     $.ajax({
       type: "POST",
@@ -41,9 +45,21 @@ function ValidarElTamañoMaximoFecha(){
       },
       datatype: "html",
       success: function (data) {
-        alert(data)
+        if(data==="Este usuario ya tiene la agenda llena para esta fecha."){
+          Swal.fire({
+            icon: 'error',      
+            text: 'Este usuario ya tiene la agenda llena para esta fecha.'      
+          });
+          ValidarAgendadelEmpleado = false
+          ValidarAgendamiento();
+        }else{
+          ValidarAgendadelEmpleado = true
+          ValidarAgendamiento();
+        }
+    
       },
   });
+
 }
 
 
@@ -85,7 +101,6 @@ function ModalEliminarAgendamiento(Id) {
 
 function ModalNovedadAgendamiento() {
   var IdUsuario = document.getElementById("IdUsuario").value
-  console.log(IdUsuario);
   $.ajax({
       type: "POST",
       url: "../Controlador/Agendamiento.php",
@@ -103,7 +118,6 @@ function ModalNovedadAgendamiento() {
 
 function ModalPrestamoAgendamiento() {
   var IdUsuario = document.getElementById("IdUsuario").value
-  console.log(IdUsuario);
   $.ajax({
       type: "POST",
       url: "../Controlador/Agendamiento.php",
@@ -391,7 +405,7 @@ function ValidarAgendamiento() {
   
 
   let submitButton = document.getElementById("Agendar");
-  if (NombreValido &&  DireccionValido && DescripcionValido && EmpleadoValido && ServicioValido && FechaValido && TelefonoValido) {
+  if (NombreValido &&  DireccionValido && DescripcionValido && EmpleadoValido && ServicioValido && FechaValido && TelefonoValido && ValidarAgendadelEmpleado) {
       submitButton.disabled = false;
   } else {
       submitButton.disabled = true;
