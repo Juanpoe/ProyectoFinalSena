@@ -26,6 +26,23 @@ function ValidarElTamañoMaximoFecha(){
 
   }
 
+  function ValidarElTamañoMaximoFechaModal(){
+    // Obtén una referencia al elemento de entrada date
+    var fechaInput = document.getElementById("Fecha");
+  
+    // Obtén la fecha actual en formato ISO (AAAA-MM-DD)
+    var fechaActual = new Date().toISOString().split("T")[0];
+    // Establece la fecha mínima como la fecha actual
+    fechaInput.setAttribute("min", fechaActual);
+  
+    // Establece la fecha máxima como, por ejemplo, 30 días después de la fecha actual
+    var fechaMaxima = new Date();
+    fechaMaxima.setDate(fechaMaxima.getDate() + 120);
+    fechaInput.setAttribute("max", fechaMaxima.toISOString().split("T")[0]);
+  
+    }
+  
+
   
 
 
@@ -59,6 +76,40 @@ function ValidarElTamañoMaximoFecha(){
     
       },
   });
+
+}
+
+
+function ValidacionDeServiciosEmpleadosModal(){
+  var IdEmpleado= document.getElementById("Usuario").value
+  var FechaServicio = document.getElementById("Fecha").value
+  var errorMsg = document.getElementById("MensajeUsuario")
+
+
+  
+
+  $.ajax({
+    type: "POST",
+    url: "../Controlador/Agendamiento.php",
+    data: {
+        'IdEmpleado': IdEmpleado,
+        'FechaServicio': FechaServicio,
+        'Metodo': "ValidacionDeServiciosEmpleadosModal"
+    },
+    datatype: "html",
+    success: function (data) {
+      if(data==="Este usuario ya tiene la agenda llena para esta fecha."){
+        errorMsg.textContent="Este empleado ya tiene la agenda llena para esta fecha."
+        ValidarAgendadelEmpleado = false
+        ValidarAgendamientoModal();
+      }else{
+        errorMsg.textContent=""
+        ValidarAgendadelEmpleado = true
+        ValidarAgendamientoModal();
+      }
+  
+    },
+});
 
 }
 
@@ -301,6 +352,28 @@ function ValidarTamañoNombreCliente(elemento) {
   }
 
 
+  function ValidarTamañoNombreClienteModal(elemento) {
+    let inputValue = elemento.value;
+  
+      var errorMsg = document.getElementById("ValidarCliente");
+  
+      if (inputValue.length < 2|| inputValue.length >=50) {
+        errorMsg.textContent = "No se permiten más de 50 caracteres o menos de 2.";
+      }else if (inputValue.trim() !== inputValue) {
+          errorMsg.textContent = "La descripcion no puede iniciar ni terminar con un espacio"
+        }
+      else if (!/^[a-zA-Z0-9ñÑ\s]+$/.test(inputValue) || /^\s/.test(inputValue) || /\s$/.test(inputValue) || /\s\s/.test(inputValue)) {
+      
+        errorMsg.textContent="El nombre del cliente no puede tener caracteres numericos o especiales"
+        }
+      else {
+        errorMsg.textContent = "";
+      }
+      ValidarAgendamientoModal();
+    }
+  
+
+
   function ValidarEmpleado() {
   let inputValue = document.getElementById("Empleado");
     var errorMsg = document.getElementById("MensajeEmpleado");
@@ -342,17 +415,6 @@ function ValidarServicio() {
   ValidarAgendamiento();
 }
 
-function ValidarServicioModal() {
-  let inputValue = document.getElementById("ServicioModal");
-  var errorMsg = document.getElementById("MensajeServicio");
-
-  if (inputValue.value == null || inputValue.value == "") { 
-    errorMsg.textContent = "Ingrese un servicio.";
-  } else {
-    errorMsg.textContent = "";
-  }
-  ValidarAgendamiento();
-}
 
 
 
@@ -376,6 +438,28 @@ function ValidarServicioModal() {
         errorMsg.textContent = "";
     }
    ValidarAgendamiento(); 
+}
+
+
+function ValidarFechaDelAgendamientoModal() {
+  var fechaInput = document.getElementById("Fecha").value;
+  var parts = fechaInput.split('-');
+  var Fecha = new Date(parts[0], parts[1] - 1, parts[2]); // Restar 1 al mes para que sea compatible con la indexación de JavaScript
+  var hoy = new Date();
+  var errorMsg = document.getElementById("MensajeFecha");
+
+  // Convertir las fechas a formato de solo fecha (sin hora) para comparar
+  var fechaFormateada = new Date(Fecha.getFullYear(), Fecha.getMonth(), Fecha.getDate());
+  var hoyFormateado = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+
+  if (fechaFormateada.getTime() === hoyFormateado.getTime()) {
+      errorMsg.textContent = "No se pueden agendar servicios para el mismo día.";
+  } else if (Fecha < hoy) {
+      errorMsg.textContent = "La fecha seleccionada ya ha pasado.";
+  } else {
+      errorMsg.textContent = "";
+  }
+ ValidarAgendamientoModal(); 
 }
 
 
@@ -412,6 +496,38 @@ function ValidarAgendamiento() {
   }
 }
 
+
+function ValidarAgendamientoModal() {
+
+  let Nombre = document.getElementById("NombreCliente").value
+  let Direccion = document.getElementById("Direccion").value.trim();
+  let Descripcion = document.getElementById("Descripcion").value.trim();
+  let Empleado = document.getElementById("Usuario").value.trim();
+  let Fecha = document.getElementById("Fecha").value.trim();
+  let Telefono = document.getElementById("Telefono").value.trim();
+
+
+
+
+
+  let NombreValido = Nombre.length > 1 && Nombre.length <= 50 && /^[a-zA-Z0-9ñÑ\s]+$/.test(Nombre) && !/^\s/.test(Nombre) && !/\s$/.test(Nombre) && !/\s\s/.test(Nombre);
+  let DireccionValido = Direccion.length >= 10 && Direccion.length <=200;
+  let DescripcionValido = Descripcion.length >= 10 && Descripcion.length<= 200 ;
+  let EmpleadoValido = Empleado!="";
+  let FechaValido =  Fecha!="";
+  let TelefonoValido = Telefono.length==10 && /^[0-9]{1,11}$/.test(Telefono) ;
+
+
+  
+
+  let submitButton = document.getElementById("Agendar");
+  if (NombreValido &&  DireccionValido && DescripcionValido && EmpleadoValido && FechaValido && TelefonoValido && ValidarAgendadelEmpleado) {
+      submitButton.disabled = false;
+  } else {
+      submitButton.disabled = true;
+  }
+}
+
 function ValidarDescripcionAgendamiento(elemento){
   let inputValue = elemento.value
   var errorMsg = document.getElementById("MensajeDescripcion");
@@ -434,6 +550,73 @@ if (inputValue.trim() !== inputValue) {
   }
 
 
+
+  function ValidarDescripcionAgendamientoModal(elemento){
+    let inputValue = elemento.value
+    var errorMsg = document.getElementById("MensajeDescripcion");
+  
+  if (inputValue.trim() !== inputValue) {
+    errorMsg.textContent = "La descripcion no puede iniciar ni terminar con un espacio"
+  }
+    else if (inputValue.length == 0){
+      errorMsg.textContent="El Ingrese alguna descripcion."
+      
+    }else if(inputValue.length<=10){
+      errorMsg.textContent="El minimo de caracteres para aceptar la descripcion es de 10."
+    }else if(inputValue.length>=200){
+    errorMsg.textContent="El maximo de caracteres para la descripcion es de 200."
+    }
+    else{
+      errorMsg.textContent=""
+    }
+    ValidarAgendamientoModal()
+    }
+
+
+
+    function ValidarTamañoNumeroModal(elemento) {
+      let inputValue = elemento.value.trim();
+  
+      var errorMsg = document.getElementById("MensajeNumero");
+  
+      if (inputValue.length >10) {
+       // Limita el contenido a los primeros 100 caracteres.
+        errorMsg.textContent = "Se permiten máximo  10 numeros.";
+      }
+      else if (!/^[0-9]{1,11}$/.test(inputValue)) {
+        errorMsg.textContent = "El telefono no puede contener caracteres especiales.";
+    }else if(inputValue.length <10){
+  
+      errorMsg.textContent = "Minimo se permiten 10 numeros.";
+  
+    }
+      else {
+        errorMsg.textContent = "";
+      }
+  
+      ValidarAgendamientoModal();
+    }
+  
+    function ValidarTamañoDireccionModal(elemento){
+      let inputValue = elemento.value;
+      var errorMsg = document.getElementById("MensajeDireccion");
+      if (inputValue.length == 0) {
+        errorMsg.textContent="Ingrese una dirección."
+      }
+      if (inputValue.trim() !== inputValue) {
+        errorMsg.textContent = "La direccion no puede iniciar ni terminar con un espacio"
+      
+    }else if(inputValue.length<=10){
+      errorMsg.textContent="El minimo de caracteres para aceptar la direccion es de 10."
+    }else if(inputValue.length>=200){
+    errorMsg.textContent="El maximo de caracteres para la descripcion es de 60."
+    }
+       else {
+        errorMsg.textContent = "";
+      }
+      ValidarAgendamientoModal();
+    }
+    
 
 
 
@@ -528,29 +711,29 @@ function EliminarInsumosAgendamiento(Id) {
 }
 
 
-function ListarAgendamientoAdministrador(Pagina) {
-    Busca = document.getElementById("Busqueda").value
-    CantidadDatos = document.getElementById("CantidadDatos").value
-    Orden = [document.getElementById("OrdenInput").value, document.getElementById("ColumnaInput").value]
-    PaginacionActual = Pagina
-    $.ajax({
-        type: "POST",
-        url: "../Controlador/Agendamiento.php",
-        data: {
-            'Orden': Orden,
-            'Pagina': Pagina,
-            'Busca': Busca,
-            'CantidadDatos': CantidadDatos,
-            'Metodo': "ListarAgendamientoAdministrador"
-        },
-        datatype: "html",
-        success: function (data) {
-            $('tbody').text("");
-            $('tbody').append(data);
-        },
-    });
-    CantidadDatosT();
 
+function ListarAgendamientoAdministrador(Pagina) {
+  Busca = document.getElementById("Busqueda").value
+  CantidadDatos = document.getElementById("CantidadDatos").value
+  Orden = [document.getElementById("OrdenInput").value, document.getElementById("ColumnaInput").value]
+  PaginacionActual = Pagina
+  $.ajax({
+      type: "POST",
+      url: "../Controlador/Agendamiento.php",
+      data: {
+          'Orden': Orden,
+          'Pagina': Pagina,
+          'Busca': Busca,
+          'CantidadDatos': CantidadDatos,
+          'Metodo': "ListarAgendamientoAdministrador"
+      },
+      datatype: "html",
+      success: function (data) {
+          $('tbody').text("");
+          $('tbody').append(data);
+      },
+  });
+  CantidadDatosT();
 
 }
 

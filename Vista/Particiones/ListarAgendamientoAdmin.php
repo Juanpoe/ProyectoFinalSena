@@ -63,6 +63,7 @@
                         <th onclick="Resaltar(this, 'agendamiento.NombreCliente')">Nombre del <br> Cliente</th>
                         <th onclick="Resaltar(this, 'servicio.NombreServicio')">Tipo de Servicio</th>
                         <th onclick="Resaltar(this, 'agendamiento.DireccionCliente')">Lugar del Servicio</th>
+                        <th onclick="Resaltar(this, 'agendamiento.Descripcion')">Descripcion</th>
                         <th onclick="Resaltar(this, 'agendamiento.TelefonoCliente')">Telefono</th>
                         <th onclick="Resaltar(this, 'agendamiento.FechaServicio')">Fecha</th>
                         <th onclick="Resaltar(this, 'herramientainsumo.Nombre')">Insumos</th>

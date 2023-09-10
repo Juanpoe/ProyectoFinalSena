@@ -140,3 +140,58 @@ function ListarPaginacion(Pagina) {
         },
     });
 }
+
+
+
+// Comentarios magicos para ayudar a la facil comprencion del codigo
+function ModalGeneralEliminar(FuncionListar, NombreTabla, NombreId, Id) {
+    $.ajax({
+        type: "POST",
+        url: "../Controlador/Main.php",
+        data: {
+            'NombreTabla': NombreTabla,
+            'NombreId': NombreId,
+            'Id': Id,
+            'FuncionListar': FuncionListar,
+            'Metodo': "ModalGeneralEliminar"
+        },
+        datatype: "html",
+        success: function (data) {
+            $('.modal-body').text("");
+            $('.modal-body').append(data);
+        },
+    });
+}
+
+function EliminarGeneral(){
+    event.preventDefault();
+    FuncionListar = document.getElementById("FuncionListar").value
+    $.ajax({
+        type: "POST",
+        url: "../Controlador/Main.php",
+        data: {
+            'NombreTabla':  $('#NombreTabla').val(),
+            'NombreId':  $('#NombreId').val(),
+            'Id':  $('#Id').val(),
+            'Metodo': 'EliminarGeneral'
+        },
+        success: function (data) {
+            if(data === "Eliminado correctamente"){
+            Swal.fire({
+                icon: 'success',
+                text: data
+              });
+              FuncionListar += "(1)";
+              eval(FuncionListar)
+              ListarPaginacion(1)
+            }
+              else{
+                Swal.fire({
+                    icon: 'error',
+                    text: data
+                  });
+              }
+            CerrarModal();
+           },
+    })  
+}

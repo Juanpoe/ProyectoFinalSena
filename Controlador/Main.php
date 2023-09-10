@@ -1,6 +1,7 @@
 <?php
 
 require_once '../Modelo/Conexion.php';
+require_once '../Modelo/Main.php';
 switch ($_POST['Metodo']) {
     case 'ListarPaginacion':
         ListarPaginacion();
@@ -11,6 +12,12 @@ switch ($_POST['Metodo']) {
     case 'ObtenerFuncionJs':
         ObtenerFuncionJs();
         break;
+    case 'ModalGeneralEliminar':
+        ModalGeneralEliminar();
+        break;
+        case 'EliminarGeneral':
+            EliminarGeneral();
+            break;
 }
 
 //Metodo para la paginacion de la tabla
@@ -22,47 +29,11 @@ function ListarPaginacion()
     $Conexion = new PDODB();
     $Conexion->Conectar();
     session_start();
-    $Funcion = $_SESSION['Funcion'];
-    $Columnas = $_SESSION["Columnas"];
-    $InstruccionSql =  $_SESSION["Instruccion"];
-    $ConCol = count($Columnas);
-    $InstruccionSql .= " AND (";
-    for ($i = 0; $i < $ConCol; $i++) {
-        $InstruccionSql .= $Columnas[$i] . " LIKE '%" . $Busca . "%' OR ";
-    }
-    $InstruccionSql = substr_replace($InstruccionSql, "", -3);
-    $InstruccionSql .= ")";
-    $Resultado = $Conexion->ObtenerDatos($InstruccionSql);
-    $CantPaginas = 0;
-    foreach ($Resultado as $key => $Value) {
-        $CantPaginas = $CantPaginas + 1;
-    }
-    $Paginas = ceil($CantPaginas / $Registros);
-    $Actual = 0;
-    if ($Pagina > 1 && $Paginas > 5) {
 
-        echo '<li class="li_pagina" onclick="' . $Funcion . '(' . ($Pagina - 1) . '); ListarPaginacion(' . ($Pagina - 1) . ', \'' . $Funcion . '\');">Anterior</li>';
-    } else if ($Pagina == 1 && $Paginas > 2) {
-        echo '<li class="li_pagina inactivopagina">Anterior</li>';
-    }
-    for ($i = 0; $i < $Paginas; $i++) {
-        $Actual = $Actual + 1;
-        if ($Paginas != 1 && $Actual < ($Pagina + 3) && $Actual > ($Pagina - 3)) {
-            if ($Actual == $Pagina) {
-                $Estilo = "activo_pagina";
-            } else {
-                $Estilo = "";
-            }
+    $MainModel = new Main($Conexion);
 
-            echo '<li class="li_pagina ' . $Estilo . '" onclick="' . $Funcion . '(' . $Actual . '); ListarPaginacion(' . $Actual . ', \'' . $Funcion . '\');">' . $Actual . '</li>';
-        }
-    }
-    if ($Pagina < $Paginas && $Paginas > 5) {
+    $MainModel->ListarPaginacion($Pagina, $Busca, $Registros);
 
-        echo '<li class="li_pagina" onclick="' . $Funcion . '(' . ($Pagina + 1) . '); ListarPaginacion(' . ($Pagina + 1) . ', \'' . $Funcion . '\');">Siguiente</li>';
-    } else if ($Pagina == $Paginas && $Paginas > 2) {
-        echo '<li class="li_pagina inactivopagina">Siguiente</li>';
-    }
 }
 
 
@@ -78,23 +49,11 @@ function CantidadDatosT()
     $NombreColumnas = $_SESSION["Columnas"];
     $InstruccionSql = $_SESSION["Instruccion"];
     $ConCol = count($NombreColumnas);
-    $InstruccionSql .= " AND (";
-    for ($i = 0; $i < $ConCol; $i++) {
-        $InstruccionSql .= $NombreColumnas[$i] . " LIKE '%" . $Busca . "%' OR ";
-    }
-    $InstruccionSql = substr_replace($InstruccionSql, "", -3);
-    $InstruccionSql .= ")";
+    $MainModel = new Main($Conexion);
 
-
-    $Resultado = $Conexion->ObtenerDatos($InstruccionSql);
-    $CantPaginas = 0;
-    foreach ($Resultado as $key => $Value) {
-        $CantPaginas = $CantPaginas + 1;
-    }
-    if ($CantidadDatos > $CantPaginas) {
-        $CantidadDatos = $CantPaginas;
-    }
-    echo 'Mostrando 1 a ' . $CantidadDatos . ' de ' . $CantPaginas . ' entradas';
+    echo $MainModel->CantidadDatosT($ConCol,$NombreColumnas, $Busca, $InstruccionSql, $CantidadDatos
+);
+    
 }
 
 function ObtenerFuncionJs()
@@ -102,3 +61,38 @@ function ObtenerFuncionJs()
     session_start();
     echo $_SESSION["Funcion"];
 }
+
+
+
+//Insanisima parte hecha por yo ps para ahorrar tiempo
+function ModalGeneralEliminar(){
+    $Id = $_POST["Id"];
+    $NombreTabla = $_POST["NombreTabla"];
+    $NombreId = $_POST["NombreId"];
+    $FuncionListar = $_POST["FuncionListar"];
+    echo'<center><h3>¿Está seguro de eliminarlo?</h3></center>
+    <input id="NombreTabla" value="'.$NombreTabla.'" type="hidden">
+    <input id="NombreId" value="'.$NombreId.'" type="hidden">
+    <input id="Id" value="'.$Id.'" type="hidden">
+    <input id="FuncionListar" value="'.$FuncionListar.'" type="hidden">
+    <div class="Boton">
+    <button class="btn-azul" id="registrar" onclick="EliminarGeneral()">Aceptar</button>
+    <button class="btn-rojo" onclick="CerrarModal()">Cancelar</button>
+    </div>
+    ';
+}
+
+// Despeguelo hp 
+// <img title="Eliminar" class="icon" onclick="window.modal.showModal(); ModalGeneralEliminar(\'NombreListar\', \'NombreTabla\', \'NombreId\', ' . $fila['IdEnCuestion'] . ')" src="Assets/Img/Iconos/basura.svg" alt="">
+function EliminarGeneral(){
+    $Id = $_POST['Id'];
+    $NombreTabla = $_POST['NombreTabla'];
+    $NombreId = $_POST['NombreId'];
+  $Conexion = new PDODB();
+  $Conexion->Conectar();
+  $MainModel = new Main($Conexion);
+
+  echo $MainModel->EliminarGeneral($Id, $NombreTabla, $NombreId);
+
+}
+

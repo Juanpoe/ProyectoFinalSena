@@ -41,6 +41,11 @@ switch ($_POST['Metodo']) {
     case 'ValidacionDeServiciosEmpleados';
     ValidacionDeServiciosEmpleados();
     break;
+
+    
+    case 'ValidacionDeServiciosEmpleadosModal';
+    ValidacionDeServiciosEmpleadosModal();
+    break;
     
     
         
@@ -55,6 +60,17 @@ function ValidacionDeServiciosEmpleados(){
     $AgendamientoModel->ValidacionDeServiciosEmpleados($IdEmpleado, $FechaServicio);
   
     }
+
+
+    function ValidacionDeServiciosEmpleadosModal(){
+        $Conexion = new PDODB();
+        $Conexion->Conectar();
+        $IdEmpleado = $_POST["IdEmpleado"];
+        $FechaServicio = $_POST["FechaServicio"];
+        $AgendamientoModel = new Agendamiento($Conexion);
+        $AgendamientoModel->ValidacionDeServiciosEmpleadosModal($IdEmpleado, $FechaServicio);
+      
+        }
   
     
 
@@ -183,7 +199,7 @@ function SelectUsuario()
 function ListarAgendamientoAdministrador()
 {
     session_start();
-    $NombreRol = $_SESSION["NombreRol"];
+    $NombreRol = $_SESSION["Rol"];
     $Pagina = $_POST['Pagina'];
     $Registros = $_POST['CantidadDatos'];
     $Inicio = (($Pagina - 1) * $Registros);
@@ -200,7 +216,8 @@ function ListarAgendamientoAdministrador()
     $Conexion = new PDODB();
     $Conexion->Conectar();
     $AgendamientoModel = new Agendamiento($Conexion);
-    $AgendamientoModel->ListarAgendamientoAdministrador($NombreRol,$Pagina,$Registros,$Inicio,$Orden,$Busca,$Columnas);
+    $AgendamientoModel->ListarAgendamientoAdministrador($NombreRol,$Registros,$Inicio,$Orden,$Busca,$Columnas);
+
 
 }
 function CambiarEstado()

@@ -25,6 +25,26 @@ class Agendamiento {
     }
 
 
+    public function ValidacionDeServiciosEmpleadosModal($IdEmpleado, $FechaServicio){
+        $InstruccionSQL ="SELECT FechaServicio FROM agendamiento  WHERE IdUsuario =".$IdEmpleado." AND FechaServicio ='".$FechaServicio."'";
+        $Resultado = $this->Conexion->ObtenerDatos($InstruccionSQL);
+       
+       
+        if ($Resultado !== false) {
+            // Contar los resultados
+            $Cantidad = count($Resultado);
+            if ($Cantidad < 10) {
+                echo "Hay espacio para programar el servicio para este empleado en esta fecha.";
+            } else {
+                echo "Este usuario ya tiene la agenda llena para esta fecha.";
+            }
+        } else {
+            echo "La consulta no se hizo correctamente.";
+        }    
+    }
+
+
+
     public function ModalNovedadAgendamiento($IdUsuario){
  
     $InstruccionSQL = "SELECT *
@@ -111,40 +131,48 @@ class Agendamiento {
     public function GuardarAgendamiento($Cantidad,$IdAcumuladas,$IdUsuario,$IdServicio,$NombreCliente,$Descripcion,$FechaServicio,$DireccionCliente,$TelefonoCliente,$Estado,$ListaCantidadHerramientaInsumo,$ListaIdHerramientaInsumo)
     {
 
-        $InstruccionSQL1 = "INSERT INTO agendamiento 
-        VALUES
-        (null,'" . $IdUsuario . "','" . $IdServicio . "','" . $ListaIdHerramientaInsumo . "','" . $NombreCliente . "','" . $Descripcion . "','" . $FechaServicio . "','" . $DireccionCliente . "','" . $TelefonoCliente . "','" . $Estado . "')";
-            $resultado1 = $this->Conexion->EjecutarInstruccion($InstruccionSQL1);
-            $InstruccionSQL2 = "SELECT MAX(IdAgendamiento) as IdAgendamiento FROM agendamiento;";
-            $resultado2 = $this->Conexion->EjecutarInstruccion($InstruccionSQL2);
-            foreach ($resultado2 as $key => $value) {
-                $IdAgendamiento = "$value[0]";
-            }
-            $InstruccionSQL3 = "INSERT INTO insumoagenda
-        VALUES
-        ('" . $IdAgendamiento . "','" . $ListaIdHerramientaInsumo . "','" . $IdAgendamiento . "','" . $ListaCantidadHerramientaInsumo . "')";
-            $resultado3 = $this->Conexion->EjecutarInstruccion($InstruccionSQL3);
-        
-            if ($ListaIdHerramientaInsumo != 'Ninguno') {
-                for ($i = 0; $i < count($IdAcumuladas); $i++) {
-                    $InstruccionSQL4 = "SELECT Cantidad FROM herramientainsumo WHERE  IdHerramientaInsumo=" . $IdAcumuladas[$i];
-                    $resultado4 =$this->Conexion->EjecutarInstruccion($InstruccionSQL4);
-                    foreach ($resultado4 as $key => $CantidadInventario) {
+        for ($i=0; $i <10 ; $i++) { 
+
+            $InstruccionSQL1 = "INSERT INTO agendamiento 
+            VALUES
+            (null,'" . $IdUsuario . "','" . $IdServicio . "','" . $ListaIdHerramientaInsumo . "','" . $NombreCliente . "','" . $Descripcion . "','" . $FechaServicio . "','" . $DireccionCliente . "','" . $TelefonoCliente . "','" . $Estado . "')";
+                $resultado1 = $this->Conexion->EjecutarInstruccion($InstruccionSQL1);
+                $InstruccionSQL2 = "SELECT MAX(IdAgendamiento) as IdAgendamiento FROM agendamiento;";
+                $resultado2 = $this->Conexion->EjecutarInstruccion($InstruccionSQL2);
+                foreach ($resultado2 as $key => $value) {
+                    $IdAgendamiento = "$value[0]";
+                }
+                $InstruccionSQL3 = "INSERT INTO insumoagenda
+            VALUES
+            ('" . $IdAgendamiento . "','" . $ListaIdHerramientaInsumo . "','" . $IdAgendamiento . "','" . $ListaCantidadHerramientaInsumo . "')";
+                $resultado3 = $this->Conexion->EjecutarInstruccion($InstruccionSQL3);
+            
+                if ($ListaIdHerramientaInsumo != 'Ninguno') {
+                    for ($i = 0; $i < count($IdAcumuladas); $i++) {
+                        $InstruccionSQL4 = "SELECT Cantidad FROM herramientainsumo WHERE  IdHerramientaInsumo=" . $IdAcumuladas[$i];
+                        $resultado4 =$this->Conexion->EjecutarInstruccion($InstruccionSQL4);
+                        foreach ($resultado4 as $key => $CantidadInventario) {
+                        }
+                        $NuevaCantidad = $CantidadInventario['Cantidad'] - $Cantidad[$i];
+            
+            
+                        $InstruccionSQL5 = "UPDATE herramientainsumo SET Cantidad =" . $NuevaCantidad . " WHERE IdHerramientaInsumo = " . $IdAcumuladas[$i];
+                        $resultado5 = $this->Conexion->EjecutarInstruccion($InstruccionSQL5);
                     }
-                    $NuevaCantidad = $CantidadInventario['Cantidad'] - $Cantidad[$i];
-        
-        
-                    $InstruccionSQL5 = "UPDATE herramientainsumo SET Cantidad =" . $NuevaCantidad . " WHERE IdHerramientaInsumo = " . $IdAcumuladas[$i];
-                    $resultado5 = $this->Conexion->EjecutarInstruccion($InstruccionSQL5);
-                }
-                if ($resultado1 == true and $resultado2 == true and $resultado3 == true and  $resultado4 == true and $resultado5 == true) {
+                    if ($resultado1 == true and $resultado2 == true and $resultado3 == true and  $resultado4 == true and $resultado5 == true) {
+                        echo "Se ha guardado correctamente";
+                    }
+                } else if ($resultado1 == true and $resultado2 == true and $resultado3 == true) {
                     echo "Se ha guardado correctamente";
+                } else {
+                    echo ("No se ha podido guardar");
                 }
-            } else if ($resultado1 == true and $resultado2 == true and $resultado3 == true) {
-                echo "Se ha guardado correctamente";
-            } else {
-                echo ("No se ha podido guardar");
-            }
+            
+
+
+
+        }
+       
 
 }
 
@@ -214,118 +242,120 @@ public function SelectUsuario(){
 }
 
 
-public function ListarAgendamientoAdministrador($NombreRol,$Pagina,$Registros,$Inicio,$Orden,$Busca,$Columnas) {
-    
+public function ListarAgendamientoAdministrador($NombreRol,$Registros,$Inicio,$Orden,$Busca,$Columnas) {
+
     $InstruccionSql = "SELECT agendamiento.IdAgendamiento, 
-        usuario.Nombre AS NombreUsuario,
-        agendamiento.NombreCliente,
-        servicio.NombreServicio AS NombreServicio,
-        agendamiento.DireccionCliente,
-        agendamiento.TelefonoCliente,
-        agendamiento.FechaServicio,
-        agendamiento.Descripcion,
-        usuario.Apellido,
-        GROUP_CONCAT(herramientainsumo.Nombre) AS NombreHerramientaInsumo,
-        insumoagenda.IdHerramientaInsumo AS Herramientas,
-        insumoagenda.Cantidad AS Cantidades,
-        CASE WHEN agendamiento.Estado = '2' THEN 'Pendiente' ELSE 'Realizado' END AS Estado
-    FROM agendamiento
-    INNER JOIN usuario ON agendamiento.IdUsuario = usuario.IdUsuario
-    INNER JOIN servicio ON agendamiento.IdServicio = servicio.IdServicio
-    LEFT JOIN insumoagenda ON agendamiento.IdAgendamiento = insumoagenda.IdAgendamiento
-    LEFT JOIN herramientainsumo ON FIND_IN_SET(herramientainsumo.IdHerramientaInsumo, agendamiento.IdHerramientaInsumo) > 0
-    WHERE agendamiento.IdAgendamiento > 0 ";
+    usuario.Nombre AS NombreUsuario,
+    agendamiento.NombreCliente,
+    servicio.NombreServicio AS NombreServicio,
+    agendamiento.DireccionCliente,
+    agendamiento.TelefonoCliente,
+    agendamiento.FechaServicio,
+    agendamiento.Descripcion,
+    usuario.Apellido,
+    GROUP_CONCAT(herramientainsumo.Nombre) AS NombreHerramientaInsumo,
+    insumoagenda.IdHerramientaInsumo AS Herramientas,
+    insumoagenda.Cantidad AS Cantidades,
+    CASE WHEN agendamiento.Estado = '2' THEN 'Pendiente' ELSE 'Realizado' END AS Estado
+FROM agendamiento
+INNER JOIN usuario ON agendamiento.IdUsuario = usuario.IdUsuario
+INNER JOIN servicio ON agendamiento.IdServicio = servicio.IdServicio
+LEFT JOIN insumoagenda ON agendamiento.IdAgendamiento = insumoagenda.IdAgendamiento
+LEFT JOIN herramientainsumo ON FIND_IN_SET(herramientainsumo.IdHerramientaInsumo, agendamiento.IdHerramientaInsumo) > 0
+WHERE agendamiento.IdAgendamiento > 0 ";
 
-    if ($NombreRol != 1) {
-        $InstruccionSql .= "AND agendamiento.IdUsuario = " . $_SESSION["IdUsuario"] . " ";
+if ($NombreRol != 1) {
+$InstruccionSql .= "AND agendamiento.IdUsuario = " . $_SESSION["IdUsuario"] . " ";
+}
+
+$_SESSION["Columnas"] = $Columnas;
+$_SESSION["Instruccion"] = $InstruccionSql;
+//Cambiar esto por el nombre de la funcion de listar
+$_SESSION["Funcion"] = "ListarAgendamientoAdministrador";
+$ConCol = count($Columnas);
+if (!empty($Busca)) {
+    $InstruccionSql .= " AND (";
+    for ($i = 0; $i < $ConCol; $i++) {
+        $InstruccionSql .= $Columnas[$i] . " LIKE '%" . $Busca . "%' OR ";
     }
+    $InstruccionSql = substr_replace($InstruccionSql, "", -3);
+    $InstruccionSql .= ")";
+}
 
-    $_SESSION["Columnas"] = $Columnas;
-    $_SESSION["Instruccion"] = $InstruccionSql;
-    //Cambiar esto por el nombre de la funcion de listar
-    $_SESSION["Funcion"] = "ListarAgendamientoAdministrador";
-    $ConCol = count($Columnas);
-    if (!empty($Busca)) {
-        $InstruccionSql .= " AND (";
-        for ($i = 0; $i < $ConCol; $i++) {
-            $InstruccionSql .= $Columnas[$i] . " LIKE '%" . $Busca . "%' OR ";
-        }
-        $InstruccionSql = substr_replace($InstruccionSql, "", -3);
-        $InstruccionSql .= ")";
-    }
+$InstruccionSql .= " GROUP BY agendamiento.IdAgendamiento ";
+if ($Orden[0] != " ") {
+    $InstruccionSql .= "ORDER BY $Orden[1] $Orden[0] ";
+}
+$InstruccionSql .= "LIMIT $Inicio, $Registros";
 
-    // $InstruccionSql .= " GROUP BY agendamiento.IdAgendamiento ";
-    if ($Orden[0] != " ") {
-        $InstruccionSql .= "ORDER BY $Orden[1] $Orden[0] ";
-    }
-    $InstruccionSql .= "LIMIT $Inicio, $Registros";
+$resultado = $this->Conexion->ObtenerDatos($InstruccionSql);
 
-    $resultado = $this->Conexion->ObtenerDatos($InstruccionSql);
-    $ResultadoContar = count($resultado);
-    if ($ResultadoContar > 0) {
-    foreach ($resultado as $fila) {
-        $IdHerramientaInsumo = $fila['Herramientas'];
-        $StringHerrameintas = [];
-        $separador = ",";
-        $separadorq = "";
-        $separadas = explode($separador, $IdHerramientaInsumo);
-        foreach ($separadas as $key => $value) {
-            if ($value != "Ninguno") {
-                $InstruccionSQL3 = "SELECT Nombre FROM  herramientainsumo where IdHerramientaInsumo=" . $value;
-                $resultado3 = $this->Conexion->ObtenerDatos($InstruccionSQL3);
+$ResultadoContar = count($resultado);
+if ($ResultadoContar > 0) {
+foreach ($resultado as $fila) {
+    $IdHerramientaInsumo = $fila['Herramientas'];
+    $StringHerrameintas = [];
+    $separador = ",";
+    $separadorq = "";
+    $separadas = explode($separador, $IdHerramientaInsumo);
+    foreach ($separadas as $key => $value) {
+        if ($value != "Ninguno") {
+            $InstruccionSQL3 = "SELECT Nombre FROM  herramientainsumo where IdHerramientaInsumo=" . $value;
+            $resultado3 = $this->Conexion->ObtenerDatos($InstruccionSQL3);
 
-                foreach ($resultado3 as $key => $fila3) {
-                    array_push($StringHerrameintas, "$fila3[Nombre]");
-                }
-            } else {
-                array_push($StringHerrameintas, $IdHerramientaInsumo);
+            foreach ($resultado3 as $key => $fila3) {
+                array_push($StringHerrameintas, "$fila3[Nombre]");
             }
+        } else {
+            array_push($StringHerrameintas, $IdHerramientaInsumo);
         }
-        $StringHerrameintas = implode($separador, $StringHerrameintas);
-        echo '
-        <tr>
-        <td data-th="Id">', $fila['IdAgendamiento'], '</td>
-            <td data-th="Nombre">', $fila['NombreUsuario'], ' ', $fila['Apellido'], '</td>
-            <td data-th="Cliente">', $fila['NombreCliente'], '</td>
-            <td data-th="Servicio">', $fila['NombreServicio'], '</td>
-            <td data-th="Direccion">', $fila['DireccionCliente'], '</td>
-            <td>', $fila['Descripcion'], '</td>
-            <td data-th="Telefono">', $fila['TelefonoCliente'], '</td>
-            <td data-th="Fecha">', $fila['FechaServicio'], '</td>
-            <td data-th="Insumo">', $StringHerrameintas, '</td>
-            <td data-th="Cantidad">', $fila['Cantidades'], '</td>
-            <td data-th="Estado"><buttom id="Estado2"   value ="', $fila['Estado'], '" class="', $fila['Estado'] == 'Pendiente' ? 'Estado Inactivo' : 'Estado Activo', '">', $fila['Estado'], '</buttom></td>  
-        ';
+    }
+    $StringHerrameintas = implode($separador, $StringHerrameintas);
+    echo '
+    <tr>
+    <td data-th="Id">', $fila['IdAgendamiento'], '</td>
+        <td data-th="Nombre">', $fila['NombreUsuario'], ' ', $fila['Apellido'], '</td>
+        <td data-th="Cliente">', $fila['NombreCliente'], '</td>
+        <td data-th="Servicio">', $fila['NombreServicio'], '</td>
+        <td data-th="Direccion">', $fila['DireccionCliente'], '</td>
+        <td>', $fila['Descripcion'], '</td>
+        <td data-th="Telefono">', $fila['TelefonoCliente'], '</td>
+        <td data-th="Fecha">', $fila['FechaServicio'], '</td>
+        <td data-th="Insumo">', $StringHerrameintas, '</td>
+        <td data-th="Cantidad">', $fila['Cantidades'], '</td>
+        <td data-th="Estado"><buttom id="Estado2"   value ="', $fila['Estado'], '" class="', $fila['Estado'] == 'Pendiente' ? 'Estado Inactivo' : 'Estado Activo', '">', $fila['Estado'], '</buttom></td>  
+    ';
 
-        $estadoValue = $fila['Estado'];
-        $estadoClass = $estadoValue == 'Pendiente' ? 'Estado Inactivo' : 'Estado Activo';
-        $checkBoxPosition = $estadoValue == 'Pendiente' ? 'after' : 'before';
-        if ($_SESSION["Rol"] == 1) {
-            if($fila['Estado'] !== "Realizado"){
-                      echo '
-                      
-            <td data-th="Operaciones"><Img title="Modificar Agendamiento" onclick="ModalAgendamiento(', $fila['IdAgendamiento'], ')" src="Assets/Img/Iconos/editar.svg"  alt="" class="IconoTabla">
-            <img title="Cambiar Estado del Agendamiento" src="Assets/Img\Iconos\desactivar.svg"   onclick="ModalEliminarAgendamiento(', $fila['IdAgendamiento'], ');" class="icon">
+    $estadoValue = $fila['Estado'];
+    $estadoClass = $estadoValue == 'Pendiente' ? 'Estado Inactivo' : 'Estado Activo';
+    $checkBoxPosition = $estadoValue == 'Pendiente' ? 'after' : 'before';
+    if ($_SESSION["Rol"] == 1) {
+        if($fila['Estado'] !== "Realizado"){
+                  echo '
+                  
+        <td data-th="Operaciones"><Img title="Modificar Agendamiento" onclick="ModalAgendamiento(', $fila['IdAgendamiento'], ')" src="Assets/Img/Iconos/editar.svg"  alt="" class="IconoTabla">
+        <img title="Cambiar Estado del Agendamiento" src="Assets/Img\Iconos\desactivar.svg"   onclick="ModalEliminarAgendamiento(', $fila['IdAgendamiento'], ');" class="icon">
+       
+    </td>
+    </tr>';
+
+        }else{
+            echo '
+            <td data-th="Operaciones"><Img src="Assets/Img/Iconos/InEditable.svg" title="Deshabilitado" alt="" class="icon">
+            <Img src="Assets/Img/Iconos/InEditable.svg" title="Deshabilitado" alt="" class="icon">
            
         </td>
-        </tr>';
+        </tr>
+            ';
 
-            }else{
-                echo '
-                <td data-th="Operaciones"><Img src="Assets/Img/Iconos/InEditable.svg" title="Deshabilitado" alt="" class="icon">
-                <Img src="Assets/Img/Iconos/InEditable.svg" title="Deshabilitado" alt="" class="icon">
-               
-            </td>
-            </tr>
-                ';
-
-            }
-    
         }
+
     }
-} else {
-    echo '<td colspan="9">Sin resultados</td>';
 }
+} else {
+echo '<td colspan="9">Sin resultados</td>';
+}
+
 
 }
 
@@ -373,13 +403,13 @@ public function CambiarEstado($IdAgendamiento,$estado1) {
         <div class="fila">
         <div class="item">
         <p>Nombre Cliente</p>
-        <input type="text" id="NombreCliente" onkeyup="ValidarTamañoNombreCliente(this);" placeholder="Ingrese nombre del cliente" value="' . $value['NombreCliente'] . '">
+        <input type="text" id="NombreCliente" onkeyup="ValidarTamañoNombreClienteModal(this);" placeholder="Ingrese nombre del cliente" value="' . $value['NombreCliente'] . '">
         <br><span id="ValidarCliente"></span>   
         
         </div>
         <div class="item">
         <p>Nombre del Empleado</p>
-        <select name="nombre" id="Usuario">
+        <select name="nombre" id="Usuario" onchange="ValidacionDeServiciosEmpleadosModal();">
             <option value="' . $value["IdUsuario"] . '">' . $value["Nombre"] . '</option>';
         foreach ($Resultado as $key => $DatosUser) {
             if ($value["IdUsuario"] != $DatosUser["IdUsuario"]) {
@@ -394,19 +424,19 @@ public function CambiarEstado($IdAgendamiento,$estado1) {
         <div class="fila">
         <div class="item">
         <p>Telefono del Cliente</p>
-        <input type="number" id="Telefono"  onkeyup="ValidarTamañoNumero(this)" value="' . $value['TelefonoCliente'] . '" placeholder="Ingrese telefono">
+        <input type="number" id="Telefono"  onkeyup="ValidarTamañoNumeroModal(this)" value="' . $value['TelefonoCliente'] . '" placeholder="Ingrese telefono">
         <br><span id="MensajeNumero"></span>
         </div>
         <div class="item">
         <p>Fecha</p>
-        <input type="date" id="Fecha"  oninput="ValidarFechaDelAgendamiento();"  value="' . $value['FechaServicio'] . '" placeholder="Ingrese fecha">
+        <input type="date" id="Fecha"  oninput="ValidarFechaDelAgendamientoModal();ValidarElTamañoMaximoFechaModal();ValidacionDeServiciosEmpleadosModal();"  value="' . $value['FechaServicio'] . '" placeholder="Ingrese fecha">
         <br><span id="MensajeFecha"></span>
         </div>
         </div>
         <div class="fila">
         <div class="item">
         <p>Direccion de la solicitud</p>
-        <input type="text" id="Direccion" value="' . $value['DireccionCliente'] . '" placeholder="Ingrese direccion" onkeyup="ValidarTamañoDireccion(this)">
+        <input type="text" id="Direccion" value="' . $value['DireccionCliente'] . '" placeholder="Ingrese direccion" onkeyup="ValidarTamañoDireccionModal(this)">
         <br><span id="MensajeDireccion"></span>
         </div>
         <div class="item">
@@ -479,7 +509,7 @@ public function CambiarEstado($IdAgendamiento,$estado1) {
                 </table>
                 <span id ="MensajeInsumo"></span></>
         <p>Descripcion</p>
-        <textarea  type="text" id="Descripcion"  oninput="ValidarDescripcionAgendamiento(this);" placeholder="Ingrese una descripcion">' . $value['Descripcion'] . '</textarea>
+        <textarea  type="text" id="Descripcion"  oninput="ValidarDescripcionAgendamientoModal(this);" placeholder="Ingrese una descripcion">' . $value['Descripcion'] . '</textarea>
         <br>
         <span id="MensajeDescripcion"></span>
         <br>
@@ -526,9 +556,6 @@ $(document).ready(function() {
             WHERE IdHerramientaInsumo = " . $IddeHerramientas;
             $Resultado11=$this->Conexion->EjecutarInstruccion($sql11);
         }
-    }else{
-        echo"Cambio Realizado";
-
     }
 
     $sql2 = "UPDATE insumoagenda SET 
